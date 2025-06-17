@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubepipeline-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kubepipeline
+  template:
+    metadata:
+      labels:
+        app: kubepipeline
+    spec:
+      containers:
+      - name: kubepipeline
+        image: saideepthij/ci-cd-test:latest
+        ports:
+        - containerPort: 3000
+
