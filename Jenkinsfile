@@ -12,7 +12,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/SaiDeepthiJ/kubepipeline'
+                git branch: 'master', url: 'https://github.com/SaiDeepthiJ/kubepipeline'
             }
         }
 
