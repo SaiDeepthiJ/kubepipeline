@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "yourdockerhubusername/ci-cd-test"
+        IMAGE_NAME = "saideepthij/ci-cd-test"
         IMAGE_TAG = "${env.BUILD_NUMBER}"
         REGISTRY_CREDENTIALS = "dockerhub-creds-id"
         KUBE_CONTEXT = "minikube"  // Update if using other clusters
@@ -12,7 +12,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/your-user/your-repo.git'
+                git branch: 'main', url: 'https://github.com/SaiDeepthiJ/kubepipeline'
             }
         }
 
