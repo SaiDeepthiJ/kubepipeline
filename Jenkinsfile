@@ -1,15 +1,19 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'node:18' // Contains npm and Node.js
+            args '-v /var/run/docker.sock:/var/run/docker.sock' // Mount Docker socket
+        }
+    }
 
     environment {
         IMAGE_NAME = "saideepthij/ci-cd-test"
         IMAGE_TAG = "${env.BUILD_NUMBER}"
         REGISTRY_CREDENTIALS = "dockerhub-creds-id"
-        KUBE_CONTEXT = "minikube"  // Update if using other clusters
+        KUBE_CONTEXT = "minikube" // Optional, if needed for helm context
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/SaiDeepthiJ/kubepipeline'
@@ -33,7 +37,11 @@ pipeline {
                 script {
                     docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
                 }
-                withCredentials([usernamePassword(credentialsId: "${REGISTRY_CREDENTIALS}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                withCredentials([usernamePassword(
+                    credentialsId: "${REGISTRY_CREDENTIALS}",
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
                     sh """
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                         docker push ${IMAGE_NAME}:${IMAGE_TAG}
@@ -63,4 +71,3 @@ pipeline {
         }
     }
 }
-
