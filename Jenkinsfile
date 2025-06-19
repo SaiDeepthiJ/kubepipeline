@@ -1,8 +1,23 @@
 pipeline {
     agent {
-        docker {
-            image 'node:18' // Contains npm and Node.js
-            args '-v /var/run/docker.sock:/var/run/docker.sock' // Mount Docker socket
+        kubernetes {
+            yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: node
+    image: node:18
+    command:
+    - cat
+    tty: true
+  - name: docker
+    image: docker:24.0.5-cli
+    command:
+    - cat
+    tty: true
+"""
+            defaultContainer 'node'
         }
     }
 
@@ -10,7 +25,7 @@ pipeline {
         IMAGE_NAME = "saideepthij/ci-cd-test"
         IMAGE_TAG = "${env.BUILD_NUMBER}"
         REGISTRY_CREDENTIALS = "dockerhub-creds-id"
-        KUBE_CONTEXT = "minikube" // Optional, if needed for helm context
+        KUBE_CONTEXT = "minikube"
     }
 
     stages {
@@ -34,18 +49,20 @@ pipeline {
 
         stage('Docker Build & Push') {
             steps {
-                script {
-                    docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
-                }
-                withCredentials([usernamePassword(
-                    credentialsId: "${REGISTRY_CREDENTIALS}",
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh """
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                    """
+                container('docker') {
+                    script {
+                        docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
+                    }
+                    withCredentials([usernamePassword(
+                        credentialsId: "${REGISTRY_CREDENTIALS}",
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh """
+                            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                            docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                        """
+                    }
                 }
             }
         }
